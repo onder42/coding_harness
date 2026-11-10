@@ -113,7 +113,7 @@ def execute_tools_node(state: Dict[str, Any]) -> Dict[str, Any]:
         if len(str(result)) > 8000:
             result = str(result)[:8000] + "\n... [TRUNCATED BY HARNESS SAFETY LAYER]"
             
-        # FIX: Append structural ToolMessage bound directly to the matching upstream ID
+        # Append structural ToolMessage bound directly to the matching upstream ID
         observation_msg = ToolMessage(
             name=function_name,
             content=str(result),
@@ -170,4 +170,4 @@ def run_agent_harness(user_query: str, max_turns: int = 5):
 # 4. INITIALIZATION RUN
 # =====================================================================
 if __name__ == "__main__":
-    run_agent_harness("create a directory in this main project folder then add a python file with hello world program")
+    run_agent_harness("Create a directory called 'test_project', move into it, create an empty file named 'app.py', and verify its contents.")
