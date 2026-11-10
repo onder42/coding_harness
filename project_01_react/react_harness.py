@@ -166,5 +166,4 @@ def run_agent_harness(user_query: str, max_turns: int = 5):
 # 4. INITIALIZATION RUN
 # =====================================================================
 if __name__ == "__main__":
-    # Test query that exercises both file reads and bash execution scripts
-    run_agent_harness("Find any requirements.txt or pyproject.toml file here, check its contents, and tell me what dependencies are set up.")
+    run_agent_harness("create a directory in this main project folder then add a python file with hello world program")
