@@ -93,7 +93,7 @@ def execute_tools_node(state: Dict[str, Any]) -> Dict[str, Any]:
     for tool_call in tool_calls:
         function_name = tool_call["name"]
         arguments = tool_call["args"] 
-        tool_call_id = tool_call["id"] # FIX: Extract unique tool call ID string reference
+        tool_call_id = tool_call["id"] #Extract unique tool call ID string reference
         
         print(f"[Harness Intercept] Invoking tool '{function_name}' with arguments: {arguments}")
         
