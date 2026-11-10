@@ -1,12 +1,9 @@
 import os
 import subprocess
 from typing import Dict, Any, List, Callable
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_ollama import ChatOllama
 
-# =====================================================================
-# 1. HARNESS TOOLS CONFIGURATION (The Agent's Capability Registry)
-# =====================================================================
 
 def read_file(path: str) -> str:
     """Reads the text contents of a target local workspace file."""
@@ -68,9 +65,6 @@ tools_schema = [
 # Initialize local Qwen engine natively bundled with the declarative capability schemas
 llm = ChatOllama(model="qwen2.5:3b", temperature=0).bind_tools(tools_schema)
 
-# =====================================================================
-# 2. STATE PIPELINE NODES (Exposed Core Graph Processing Logic)
-# =====================================================================
 
 def agent_think_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Node: Processes context history and asks the LLM for its next step."""
@@ -79,7 +73,7 @@ def agent_think_node(state: Dict[str, Any]) -> Dict[str, Any]:
     # Inject an explicit system prompt context if this is the first turn
     if len(state["messages"]) == 1:
         system_msg = HumanMessage(
-            content="System Context: You are a secure local coding agent harness. Use tools to inspect or fix things."
+            content="System Context: You are a secure local coding agent harness. Use tools to inspect or fix things. If a command is denied, try an alternative approach or ask for clarifying guidance."
         )
         state["messages"].insert(0, system_msg)
 
@@ -98,7 +92,8 @@ def execute_tools_node(state: Dict[str, Any]) -> Dict[str, Any]:
     
     for tool_call in tool_calls:
         function_name = tool_call["name"]
-        arguments = tool_call["args"] # Clean Python dictionary, no manual json.loads required!
+        arguments = tool_call["args"] 
+        tool_call_id = tool_call["id"] # FIX: Extract unique tool call ID string reference
         
         print(f"[Harness Intercept] Invoking tool '{function_name}' with arguments: {arguments}")
         
@@ -111,9 +106,11 @@ def execute_tools_node(state: Dict[str, Any]) -> Dict[str, Any]:
         if len(str(result)) > 8000:
             result = str(result)[:8000] + "\n... [TRUNCATED BY HARNESS SAFETY LAYER]"
             
-        # Append observation directly as an structural message block back into history array
-        observation_msg = HumanMessage(
-            content=f"Observation from tool '{function_name}':\n{result}\nNow continue evaluating."
+        # Append structural ToolMessage bound directly to the matching upstream ID
+        observation_msg = ToolMessage(
+            name=function_name,
+            content=str(result),
+            tool_call_id=tool_call_id
         )
         state["messages"].append(observation_msg)
         
@@ -121,7 +118,7 @@ def execute_tools_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 def conditional_router(state: Dict[str, Any]) -> str:
     """Router: Evaluates message objects to route execution paths dynamically."""
-    last_message = state.messages[-1] if hasattr(state, "messages") else state["messages"][-1]
+    last_message = state["messages"][-1]
     
     # Assess if valid tools require background handling before finishing up the request
     if hasattr(last_message, "tool_calls") and last_message.tool_calls:
@@ -131,9 +128,7 @@ def conditional_router(state: Dict[str, Any]) -> str:
     print("-> Router Decision: Final execution target achieved. Routing to END.")
     return "end"
 
-# =====================================================================
-# 3. MANUAL GRAPH EXECUTION LOOP (The Harness Engine Core)
-# =====================================================================
+
 
 def run_agent_harness(user_query: str, max_turns: int = 5):
     """Orchestrates structural ReAct sequences without hidden framework constraints."""
@@ -145,6 +140,7 @@ def run_agent_harness(user_query: str, max_turns: int = 5):
     for _ in range(max_turns):
         # Step A: Think (Agent Node)
         state = agent_think_node(state)
+        for m in state['messages']:print(m)
         
         # Step B: Decide Route (Conditional Router)
         next_step = conditional_router(state)
@@ -152,7 +148,6 @@ def run_agent_harness(user_query: str, max_turns: int = 5):
         if next_step == "call_tools":
             # Step C: Act & Observe (Tool Execution Node)
             state = execute_tools_node(state)
-            # The loop naturally loops back up to Step A on the next loop check step!
         elif next_step == "end":
             print("\n=================== FINAL HARNESS RESPONSE ===================")
             print(state["messages"][-1].content)
@@ -162,8 +157,6 @@ def run_agent_harness(user_query: str, max_turns: int = 5):
     if state["turns"] >= max_turns:
         print(f"\n[Harness Warning] Loop interrupted automatically. Safe turn cap limit reached ({max_turns}).")
 
-# =====================================================================
-# 4. INITIALIZATION RUN
-# =====================================================================
+
 if __name__ == "__main__":
-    run_agent_harness("create a directory in this main project folder then add a python file with hello world program")
+    run_agent_harness("Create a directory called 'test_project', move into it, create an empty file named 'app.py', and verify its contents.")

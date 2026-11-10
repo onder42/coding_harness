@@ -5,9 +5,6 @@ from typing import Dict, Any, List, Callable
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_ollama import ChatOllama
 
-# =====================================================================
-# 1. PERSISTENT BACKGROUND SHELL ENVIRONMENT
-# =====================================================================
 
 class PersistentBashSandbox:
     def __init__(self):
@@ -50,9 +47,6 @@ class PersistentBashSandbox:
 # Initialize the persistent sandbox background instance globally
 sandbox = PersistentBashSandbox()
 
-# =====================================================================
-# 2. HARNESS TOOLS CONFIGURATION & MODEL BINDING
-# =====================================================================
 
 def run_bash(command: str) -> str:
     """Executes a bash shell script string inside the persistent background session environment."""
@@ -87,9 +81,6 @@ tools_schema = [
 # Initialize local Qwen model natively equipped with the capability registry schemas
 llm = ChatOllama(model="qwen2.5:3b", temperature=0).bind_tools(tools_schema)
 
-# =====================================================================
-# 3. STATE PIPELINE NODES (Exposed Graph Execution Logic)
-# =====================================================================
 
 def agent_think_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Node: Processes compounding chat history and requests next steps from the model."""
@@ -151,9 +142,6 @@ def conditional_router(state: Dict[str, Any]) -> str:
     print("-> Router Decision: Final execution target achieved. Routing to END.")
     return "end"
 
-# =====================================================================
-# 4. MANUAL REACT GRAPH ORCHESTRATOR
-# =====================================================================
 
 def run_agent_harness(user_query: str, max_turns: int = 3):
     """Orchestrates structural ReAct sequences without hidden framework constraints."""
@@ -182,8 +170,6 @@ def run_agent_harness(user_query: str, max_turns: int = 3):
     if state["turns"] >= max_turns:
         print(f"\n[Harness Warning] Loop interrupted automatically. Safe turn cap limit reached ({max_turns}).")
 
-# =====================================================================
-# 4. INITIALIZATION RUN
-# =====================================================================
+
 if __name__ == "__main__":
     run_agent_harness("Create a directory called 'test_project', move into it, create an empty file named 'app.py', and verify its contents.")
