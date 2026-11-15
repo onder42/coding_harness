@@ -1,7 +1,6 @@
 import os
 import subprocess
 from typing import Dict, Any, List, Callable
-# Use proper structural LangChain message schemas with unique tool call ID bindings
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_ollama import ChatOllama
 
@@ -79,7 +78,7 @@ tools_schema = [
 ]
 
 # Initialize local Qwen model natively equipped with the capability registry schemas
-llm = ChatOllama(model="qwen2.5:3b", temperature=0).bind_tools(tools_schema)
+llm = ChatOllama(model="qwen3.5:2b", temperature=0).bind_tools(tools_schema)
 
 
 def agent_think_node(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -89,7 +88,7 @@ def agent_think_node(state: Dict[str, Any]) -> Dict[str, Any]:
     if len(state["messages"]) == 1:
         system_msg = HumanMessage(
             content="System Context: You are a secure local coding agent harness equipped with a persistent shell. "
-                    "Use your tools to achieve the goal. Note that directory changes (cd) are retained across turns."
+                    "Use your  persistant shell tool to achieve the goal. Note that directory changes (cd) are retained across turns."
         )
         state["messages"].insert(0, system_msg)
 
@@ -118,8 +117,8 @@ def execute_tools_node(state: Dict[str, Any]) -> Dict[str, Any]:
             
         print(f"[Output]:\n{result}")
         
-        if len(str(result)) > 8000:
-            result = str(result)[:8000] + "\n... [TRUNCATED BY HARNESS SAFETY LAYER]"
+        #if len(str(result)) > 8000:
+            #result = str(result)[:8000] + "\n... [TRUNCATED BY HARNESS SAFETY LAYER]"
             
         # Secure strict relational binding with ToolMessage mapping to clear upstream confusion
         observation_msg = ToolMessage(
@@ -143,7 +142,7 @@ def conditional_router(state: Dict[str, Any]) -> str:
     return "end"
 
 
-def run_agent_harness(user_query: str, max_turns: int = 3):
+def run_agent_harness(user_query: str, max_turns: int = 5):
     """Orchestrates structural ReAct sequences without hidden framework constraints."""
     state = {
         "messages": [HumanMessage(content=user_query)],
@@ -153,7 +152,7 @@ def run_agent_harness(user_query: str, max_turns: int = 3):
     for _ in range(max_turns):
         # Step A: Think (Agent Node)
         state = agent_think_node(state)
-        for m in state['messages']:print(m)
+        for m in state['messages']:print(f"\n{m}")
         
         # Step B: Decide Route (Conditional Router)
         next_step = conditional_router(state)
@@ -172,4 +171,4 @@ def run_agent_harness(user_query: str, max_turns: int = 3):
 
 
 if __name__ == "__main__":
-    run_agent_harness("Create a directory called 'test_project', move into it, create an empty file named 'app.py', and verify its contents.")
+    run_agent_harness("inspect the file '/home/chris/Desktop/coding_harness/test_project' fix the file so it can be ran and tested with the directory /home/chris/Desktop/coding_harness/project_01_react/docs/notes")

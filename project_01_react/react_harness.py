@@ -63,7 +63,7 @@ tools_schema = [
 ]
 
 # Initialize local Qwen engine natively bundled with the declarative capability schemas
-llm = ChatOllama(model="qwen2.5:3b", temperature=0).bind_tools(tools_schema)
+llm = ChatOllama(model="qwen3:1.7b", temperature=0).bind_tools(tools_schema)
 
 
 def agent_think_node(state: Dict[str, Any]) -> Dict[str, Any]:
