@@ -12,7 +12,7 @@ from src.tools.base import BaseTool
 
 class PersistentBashSandbox:
 
-    def __init__(self, initial_dir: str, timeout_seconds: float = 15.0):
+    def __init__(self, initial_dir: str, timeout_seconds: float = 20.0):
         self.workspace_root = initial_dir
         self.timeout_seconds = timeout_seconds
         self.sentinel = "---COMMAND_FINISHED_SENTINEL---"
