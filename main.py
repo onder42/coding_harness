@@ -14,10 +14,7 @@ SYSTEM_PROMPT = (
     "Use `write_file` whenever creating or updating files. Directory changes (cd) persist across turns."
 )
 
-
-
 if __name__ == "__main__":
-
     # 1. Scope Lockdown: Enforce a dedicated sandbox folder
     workspace_root = "/home/chris/Desktop/coding_harness"
     os.makedirs(workspace_root, exist_ok=True)
@@ -30,22 +27,22 @@ if __name__ == "__main__":
         WriteFileTool(sandbox, workspace_root),
     ]
 
-    # 3. Initialize LLM & Inject Dependencies into the Graph Harness
+    # 3. Initialize Executor & Planner LLMs
     base_llm = ChatOllama(model="qwen3.5:2b", temperature=0)
+    planner_llm = ChatOllama(model="qwen2.5:3b", temperature=0)
+
+    # 4. Inject Dependencies into the Graph Harness
     harness = AgentHarness(
         llm=base_llm,
+        planner_llm=planner_llm,
         tools=active_tools,
         system_prompt=SYSTEM_PROMPT,
-        max_turns=10,
+        max_turns=8,
     )
 
     user_prompt = (
-        "Create a directory named 'test_project' and cd into it. "
-        "Write a single Python script named 'simple_rag.py' that implements a minimal local RAG pipeline "
-        "using LangChain and Ollama (using 'mxbai-embed-large' for embeddings and 'qwen3.5:2b' for generation) "
-        "over a small hardcoded list of 3 sample documents in memory. "
-        "Include an assertion at the bottom of the script to verify that the model returns a non-empty response. "
-        "After writing 'simple_rag.py', read the file back to inspect it, then execute it with python3 to verify all assertions pass."
+        "Create a directory named 'test_project'. cd into the directory and create 3 python file one for  adata classes  Document with source, metadata, and context. for a rag system"
+        "Then crate another file for a dataclass Chunk with the approprait fiels for a rag system. make a 3rd file to test the set."
     )
 
     initial_state = AgentState(messages=[HumanMessage(content=user_prompt)])
@@ -55,4 +52,3 @@ if __name__ == "__main__":
     finally:
         sandbox.close()
         print("\n[Harness] Background shell terminated cleanly.")
-
