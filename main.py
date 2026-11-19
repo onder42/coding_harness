@@ -40,12 +40,9 @@ if __name__ == "__main__":
     )
 
     user_prompt = (
-        "Create a directory named 'test_project' and cd into it. "
-        "Write a single Python script named 'simple_rag.py' that implements a minimal local RAG pipeline "
-        "using LangChain and Ollama (using 'mxbai-embed-large' for embeddings and 'qwen3.5:2b' for generation) "
-        "over a small hardcoded list of 3 sample documents in memory. "
-        "Include an assertion at the bottom of the script to verify that the model returns a non-empty response. "
-        "After writing 'simple_rag.py', read the file back to inspect it, then execute it with python3 to verify all assertions pass."
+        "Inspect the test_project directory. "
+        "Exicute the chunk.py file. This creates chunks from a Document object for a Rag system. "
+        "test the chunking and tell me the output."
     )
 
     initial_state = AgentState(messages=[HumanMessage(content=user_prompt)])
