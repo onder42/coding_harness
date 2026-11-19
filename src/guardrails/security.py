@@ -44,7 +44,8 @@ def request_human_approval(action_title: str, details: str) -> tuple[bool, str]:
         return False, "User cancelled execution."
 
     if choice != "y":
+        user_input = input("Reason : ")
         print("Action Denied. Sending refusal message to the AI.")
-        return False, "Execution Denied: The user inspected this action and rejected it."
+        return False, f"Execution Denied: The user inspected this action and rejected it. New Instruction: {user_input}"
 
     return True, "Approved"

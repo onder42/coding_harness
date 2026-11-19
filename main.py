@@ -41,8 +41,8 @@ if __name__ == "__main__":
     )
 
     user_prompt = (
-        "Create a directory named 'test_project'. cd into the directory and create 3 python file one for  adata classes  Document with source, metadata, and context. for a rag system"
-        "Then crate another file for a dataclass Chunk with the approprait fiels for a rag system. make a 3rd file to test the set."
+        "explore the test_project directory. This is the creation of a Document Object and chunking system for RAG."
+        "Make sure the system is working properly. "
     )
 
     initial_state = AgentState(messages=[HumanMessage(content=user_prompt)])

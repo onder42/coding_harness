@@ -32,12 +32,11 @@ class AgentHarness:
         planner_messages = [
             SystemMessage(
                 content=(
-                    "You are a simple planner. Break the user's request into a "
-                    "short, numbered list of simple steps (1., 2., 3., etc.), keep the number of steps below 8."
-                    "The executor AI only has three tools: `run_bash`, `read_file`, and `write_file` :run_bash is a persistant terminal."
-                    "Map each step to a specific action (e.g., mkdir/cd, write_file, read_file, run python script) "
-                    "and preserve exact file names, libraries, and model names from the prompt. "
-                    "Do not write code or explanations. Output ONLY the numbered checklist."
+                    "You are a simple planner. Break the user's request into a list of task with subtask."
+                    "short, numbered task (1., 2., 3., etc.), with steps to complete each task."
+                    " keep the number of task below 5.) "
+                    "Preserve exact file names, libraries, and model names from the prompt if given. "
+                    "Do not write code. Output ONLY the task and subtask list."
                 )
             ),
             HumanMessage(content=user_goal),
@@ -129,7 +128,7 @@ class AgentHarness:
         for _ in range(self.max_turns):
             # Step A: Think (Agent Node)
             state = self.agent_think_node(state)
-            for m in state["messages"]:print(f"\n{m}")
+            for m in state.messages:print(f"\n{m}")
 
             # Step B: Decide Route (Conditional Router)
             next_step = self.conditional_router(state)
