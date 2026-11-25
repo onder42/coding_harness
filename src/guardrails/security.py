@@ -8,6 +8,7 @@ FORBIDDEN_TOKENS = [
     ":(){ :|:& };:",
     "chmod",
     "shutdown",
+    "/testbed"
 ]
 
 

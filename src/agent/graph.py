@@ -1,10 +1,12 @@
 from typing import Dict, List
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import SystemMessage, ToolMessage
-
+import time
 from src.agent.agent_state import AgentState
 from src.tools.base import BaseTool
 
+
+RETRY_CODES = ("503", "504", "429", "UNAVAILABLE", "DEADLINE_EXCEEDED")
 
 class AgentHarness:
     def __init__(
@@ -12,7 +14,7 @@ class AgentHarness:
         llm: BaseChatModel,
         tools: List[BaseTool],
         system_prompt: str,
-        max_turns: int = 5,
+        max_turns: int = 15,
     ):
         self.tools_registry: Dict[str, BaseTool] = {tool.name: tool for tool in tools}
         tools_schema = [tool.to_json_schema() for tool in tools]
@@ -22,17 +24,25 @@ class AgentHarness:
         self.system_prompt = system_prompt
         self.max_turns = max_turns
 
+
     def agent_think_node(self, state: AgentState) -> AgentState:
-        """Node: Processes compounding chat history and requests next steps from the model."""
         print(f"\n--- [NODE] Agent Thinking (Turn {state.turns + 1}) ---")
+        for attempt in range(5):
+            try:
+                response = self.llm.invoke(state.messages)
+                state.add_message(response)
+                state.turns += 1
+                return state
+            except Exception as e:
+                if any(code in str(e) for code in RETRY_CODES):
+                    wait = 3 * (attempt + 1)
+                    print(f"[Harness] Transient API error (attempt {attempt + 1}/5). Retrying in {wait}s...")
+                    time.sleep(wait)
+                else:
+                    raise
+        raise RuntimeError("Gemini API remained unavailable after 5 retries.")
 
-        if not any(isinstance(m, SystemMessage) for m in state.messages):
-            state.messages.insert(0, SystemMessage(content=self.system_prompt))
 
-        response = self.llm.invoke(state.messages)
-        state.add_message(response)
-        state.turns += 1
-        return state
 
     def execute_tools_node(self, state: AgentState) -> AgentState:
         """Node: Executes requested tools and appends ToolMessage observations."""

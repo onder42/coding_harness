@@ -1,6 +1,7 @@
 import os
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
-from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.agent.agent_state import AgentState
 from src.agent.graph import AgentHarness
@@ -8,18 +9,21 @@ from src.tools.base import BaseTool
 from src.tools.file_system import ReadFileTool, WriteFileTool
 from src.tools.terminal import BashTool, PersistentBashSandbox
 
+load_dotenv()
+
+workspace_root = "/home/chris/Desktop/coding_harness"
+
 SYSTEM_PROMPT = (
-    "You are a secure local coding agent harness equipped with a persistent shell "
-    "and a dedicated file writer. Use `run_bash` for navigating, inspecting, and running scripts. "
-    "Use `write_file` whenever creating or updating files. Directory changes (cd) persist across turns."
+    f"You are a focused local coding worker running inside `{workspace_root}`. "
+    "Use ONLY relative paths (e.g., `test_project/test_task_manager.py`). "
+    "NEVER use `/testbed` or `/workspace`—those directories do not exist on this machine. "
+    "Execute all steps in your current assignment using `run_bash`, `read_file`, and `write_file`. "
+    "Directory changes (`cd`) persist across turns. When all steps in your assignment are finished, "
+    "stop calling tools and write a brief 2-sentence summary of what you built or verified."
 )
 
-
-
 if __name__ == "__main__":
-
     # 1. Scope Lockdown: Enforce a dedicated sandbox folder
-    workspace_root = "/home/chris/Desktop/coding_harness"
     os.makedirs(workspace_root, exist_ok=True)
 
     # 2. Initialize Shared Sandbox & Tools
@@ -30,26 +34,34 @@ if __name__ == "__main__":
         WriteFileTool(sandbox, workspace_root),
     ]
 
-    # 3. Initialize LLM & Inject Dependencies into the Graph Harness
-    base_llm = ChatOllama(model="qwen3.5:2b", temperature=0)
+    base_llm = ChatGoogleGenerativeAI(
+    model="gemini-3.5-flash-lite",
+    temperature=0,
+    timeout=60,
+    max_retries=2,
+    )
+
+
+
     harness = AgentHarness(
         llm=base_llm,
         tools=active_tools,
         system_prompt=SYSTEM_PROMPT,
-        max_turns=10,
+        max_turns=15,
     )
-
-    user_prompt = (
-        "Inspect the test_project directory. "
-        "Exicute the chunk.py file. This creates chunks from a Document object for a Rag system. "
-        "test the chunking and tell me the output."
-    )
-
-    initial_state = AgentState(messages=[HumanMessage(content=user_prompt)])
 
     try:
-        harness.run(initial_state)
+        while True:
+            user_prompt = input("\nEnter Prompt (or 'q' to quit): ").strip()
+            if not user_prompt:
+                continue
+            if user_prompt.lower() in {"q", "quit", "end"}:
+                break
+            # Fresh AgentState dumps all prior LLM messages on every prompt
+            initial_state = AgentState(messages=[HumanMessage(content=user_prompt)])
+            harness.run(initial_state)
+    except KeyboardInterrupt:
+        print("\n[Harness] Interrupted by user.")
     finally:
         sandbox.close()
         print("\n[Harness] Background shell terminated cleanly.")
-
